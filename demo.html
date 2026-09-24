@@ -25,6 +25,13 @@
   .step.active .term,.step.done .term{display:block}
   .step .out{font-family:var(--mono);font-size:12px;white-space:pre-wrap;background:#0b1220;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:8px;max-height:240px;overflow:auto}
   .ok{color:var(--green)} .err{color:var(--red)} .dim{color:var(--muted)} .amber{color:var(--amber)}
+  .links{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+  .links a{font-size:14px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:10px;color:#e5e7eb;background:var(--line)}
+  .links a.repo{background:var(--accent);color:#fff}
+  .links a:hover{opacity:.9}
+  .step h2 a{text-decoration:none;color:var(--text)}
+  .step h2 a:hover{color:var(--green)}
+  .github-hint{font-size:11px;color:var(--muted);display:block;margin-top:2px}
   .footer{color:var(--muted);font-size:12px;margin-top:26px;text-align:center}
   .footer a{color:var(--accent);text-decoration:none}
   .bar{height:4px;background:var(--line);border-radius:999px;margin:18px 0;overflow:hidden}
@@ -40,24 +47,35 @@
   <div class="bar"><i id="bar"></i></div>
 
   <div class="step" id="s1">
-    <h2><span class="n">1</span> Safety — a real pay-per-call token risk API <span class="amber" style="font-size:12px">(x402 · Base)</span></h2>
+    <h2><span class="n">1</span> <a href="https://github.com/prayingperceptions/token-risk-api" target="_blank" rel="noopener">Safety — a real pay-per-call token risk API</a> <span class="amber" style="font-size:12px">(x402 · Base)</span><span class="github-hint">click title → open repo</span></h2>
     <p class="desc">Call the paid endpoint with no payment and you get a proper <b>HTTP 402 + PAYMENT-REQUIRED</b> — the agent pays USDC on Base to unlock the report. Protocol, not a paywall page.</p>
     <div class="term">$ curl -i "https://token-risk-api-topaz.vercel.app/v1/risk?token=0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"</div>
     <div class="out" id="o1">waiting…</div>
+    <div class="links"><a class="repo" href="https://github.com/prayingperceptions/token-risk-api" target="_blank" rel="noopener">Repo</a><a href="https://token-risk-api-topaz.vercel.app/health" target="_blank" rel="noopener">Live endpoint</a></div>
   </div>
 
   <div class="step" id="s2">
-    <h2><span class="n">2</span> Identity — your wallet address IS your email <span class="ok" style="font-size:12px">(agent-inbox)</span></h2>
+    <h2><span class="n">2</span> <a href="https://github.com/prayingperceptions/agent-inbox" target="_blank" rel="noopener">Identity — your wallet address IS your email</a> <span class="ok" style="font-size:12px">(agent-inbox)</span><span class="github-hint">click title → open repo</span></h2>
     <p class="desc">A stable, human-readable handle is derived deterministically from a wallet. No signup, no account — the address is the identity.</p>
     <div class="term">$ curl "https://agent-inbox-pi.vercel.app/handle/0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA"</div>
     <div class="out" id="o2">waiting…</div>
+    <div class="links"><a class="repo" href="https://github.com/prayingperceptions/agent-inbox" target="_blank" rel="noopener">Repo</a><a href="https://agent-inbox-pi.vercel.app/handle/0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA" target="_blank" rel="noopener">Live endpoint</a></div>
   </div>
 
   <div class="step" id="s3">
-    <h2><span class="n">3</span> Custody — a signed proof of who owns the agent <span class="ok" style="font-size:12px">(agent-recovery)</span></h2>
+    <h2><span class="n">3</span> <a href="https://github.com/prayingperceptions/agent-recovery" target="_blank" rel="noopener">Custody — a signed proof of who owns the agent</a> <span class="ok" style="font-size:12px">(agent-recovery)</span><span class="github-hint">click title → open repo</span></h2>
     <p class="desc">Return the signed custody binding for an agent + deployer. Verifiable ownership, on demand.</p>
     <div class="term">$ curl "https://agent-recovery.vercel.app/custody/binding?agent=0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA&amp;deployer=0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA"</div>
     <div class="out" id="o3">waiting…</div>
+    <div class="links"><a class="repo" href="https://github.com/prayingperceptions/agent-recovery" target="_blank" rel="noopener">Repo</a><a href="https://agent-recovery.vercel.app/custody/binding?agent=0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA&amp;deployer=0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA" target="_blank" rel="noopener">Live endpoint</a></div>
+  </div>
+
+  <div class="step" id="s4">
+    <h2><span class="n">4</span> <a href="https://github.com/prayingperceptions/agent-authority" target="_blank" rel="noopener">Permission — a contract decides allow / ask / deny</a> <span class="ok" style="font-size:12px">(agent-authority)</span><span class="github-hint">click title → open repo</span></h2>
+    <p class="desc">Evaluate an action request against a contract. The gate returns <b>allow</b>, <b>ask</b> (human approval needed), or <b>deny</b> — least-privilege, fail-closed.</p>
+    <div class="term">$ curl -X POST "https://agent-authority-beige.vercel.app/evaluate" -H 'content-type: application/json' -d '{ contract, request }'</div>
+    <div class="out" id="o4">waiting…</div>
+    <div class="links"><a class="repo" href="https://github.com/prayingperceptions/agent-authority" target="_blank" rel="noopener">Repo</a><a href="https://agent-authority-beige.vercel.app/evaluate" target="_blank" rel="noopener">Live endpoint</a></div>
   </div>
 
   <div class="footer">
@@ -66,7 +84,7 @@
 </div>
 
 <script>
-const steps = ["s1","s2","s3"];
+const steps = ["s1","s2","s3","s4"];
 const bar = document.getElementById("bar");
 function out(id, text, cls) {
   const el = document.getElementById(id); el.innerHTML = "";
@@ -88,10 +106,15 @@ async function run(i){
       const r = await fetch("https://agent-inbox-pi.vercel.app/handle/0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA",{headers:{Accept:"application/json"}});
       const j = await r.json().catch(()=>({}));
       out("o2", JSON.stringify(j,null,2), j.handle?"ok":"err");
-    } else {
+    } else if(i===2){
       const r = await fetch("https://agent-recovery.vercel.app/custody/binding?agent=0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA&deployer=0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA",{headers:{Accept:"application/json"}});
       const j = await r.json().catch(()=>({}));
       out("o3", JSON.stringify(j,null,2), j.signature||j.binding?"ok":"err");
+    } else {
+      const c = { version:"0.1", contractId:"contract_live", subjectAgentId:"agent_alice", issuer:"issuer_corp", purpose:"live demo", createdAt:new Date(Date.now()-60000).toISOString(), expiresAt:new Date(Date.now()+3600000).toISOString(), capabilities:[{ resource:"box", actions:["read"], constraints:{ cwd:"workspace" }, decision:"allow" }] };
+      const r = await fetch("https://agent-authority-beige.vercel.app/evaluate",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({contract:c,request:{agentId:"agent_alice",resource:"box",action:"read",input:{cwd:"workspace"}}})});
+      const j = await r.json().catch(()=>({}));
+      out("o4", JSON.stringify(j,null,2), j.decision?"ok":"err");
     }
   } catch(e){ out("o"+(i+1), "ERROR: "+e.message, "err"); }
   el.classList.remove("active"); el.classList.add("done");
