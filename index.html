@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Stack — the open-source rails of the agent economy</title>
+<meta name="description" content="The 4-pillar open-source stack for agents: identity, safety, permission, custody. Built on x402, Base, and Coinbase. Open source. MIT.">
+<style>
+  :root{--bg:#0a0e16;--card:#111827;--line:#1f2937;--text:#e5e7eb;--muted:#9ca3af;--accent:#6366f1;--green:#34d399;--red:#f87171;--amber:#fbbf24;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  header{padding:28px 0;border-bottom:1px solid var(--line)}
+  .logo{font-weight:700;font-size:20px;letter-spacing:.5px}
+  .logo span{color:var(--accent)}
+  nav{display:flex;gap:20px;align-items:center}
+  nav a{color:var(--muted);text-decoration:none;font-size:14px}
+  nav a:hover{color:var(--text)}
+  .hero{padding:72px 0 48px;text-align:center}
+  .hero h1{font-size:44px;line-height:1.15;font-weight:800;letter-spacing:-.5px}
+  .hero h1 em{font-style:normal;color:var(--accent)}
+  .hero p{max-width:640px;margin:20px auto 8px;color:var(--muted);font-size:18px}
+  .hero .sub{color:var(--green);font-weight:600;font-size:15px}
+  .cta{display:flex;gap:14px;justify-content:center;margin-top:32px;flex-wrap:wrap}
+  .btn{display:inline-block;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-ghost{border:1px solid var(--line);color:var(--text)}
+  .btn-ghost:hover{border-color:var(--accent);color:#fff}
+  .pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin:48px 0}
+  .pillar{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px}
+  .pillar h3{font-size:18px;margin-bottom:6px}
+  .pillar .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;margin-bottom:10px}
+  .tag-a{background:#312e81;color:#a5b4fc}.tag-b{background:#064e3b;color:#6ee7b7}.tag-c{background:#78350f;color:#fcd34d}.tag-d{background:#4c1d95;color:#ddd6fe}
+  .pillar p{color:var(--muted);font-size:14px}
+  .pillar .live{color:var(--green);font-size:12px;font-weight:600;margin-top:12px}
+  section{margin:56px 0}
+  h2{font-size:28px;font-weight:700;margin-bottom:8px}
+  .sec-sub{color:var(--muted);margin-bottom:24px}
+  .pricing{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+  .plan{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;position:relative;display:flex;flex-direction:column}
+  .plan.featured{border-color:var(--accent)}
+  .plan .banner{position:absolute;top:-10px;left:20px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px}
+  .plan h4{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+  .plan .price{font-size:34px;font-weight:800;margin:10px 0 2px}
+  .plan .price span{font-size:14px;color:var(--muted);font-weight:400}
+  .plan ul{list-style:none;margin:16px 0;color:var(--muted);font-size:14px;flex:1}
+  .plan li{padding:5px 0}
+  .plan .liverow{color:var(--green)}
+  .buy{display:flex;flex-direction:column;gap:8px;margin-top:auto}
+  .buynav{display:inline-block;width:100%;text-align:center;padding:12px 14px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;box-sizing:border-box}
+  .buynav-primary{background:var(--accent);color:#fff}
+  .buynav-primary:hover{opacity:.92}
+  .buynav-ghost{border:1px solid var(--line);color:var(--text)}
+  .buynav-ghost:hover{border-color:var(--accent);color:#fff}
+  .buynav-crypto{background:#0e7490;color:#fff}
+  .buy .pay-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:2px}
+  .paynote{font-size:12px;color:var(--muted);max-width:760px;margin:16px auto 0;text-align:center}
+  table{width:100%;border-collapse:collapse;font-size:14px;background:var(--card);border-radius:12px;overflow:hidden}
+  th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+  td a{color:var(--accent);text-decoration:none}
+  .stack{margin-top:40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+  .stack .repo{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .stack .repo code{color:var(--green)}
+  .stack .repo p{color:var(--muted);font-size:13px;margin-top:6px}
+  footer{padding:40px 0 60px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;text-align:center}
+  .note{font-size:12px;color:var(--muted);max-width:760px;margin:0 auto}
+  @media(max-width:640px){.hero h1{font-size:32px}.hero{padding:48px 0 32px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap" style="display:flex;justify-content:space-between;align-items:center">
+    <div class="logo">Agent<span>Stack</span></div>
+    <nav><a href="#pillars">Pillars</a><a href="#pricing">Pricing</a><a href="demo.html">Live demo</a><a href="#endpoints">Endpoints</a><a href="#stack">Open source</a></nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <p class="sub">Built on x402 · Base · Coinbase — open source, MIT</p>
+    <h1>The rails of the <em>agent economy.</em></h1>
+    <p><b>Know it's safe. Prove you're allowed. Verify &amp; get paid on one handle. And never lose your agent, your credits, or your evidence.</b></p>
+    <p>Four open-source pillars that give agents — and the humans who deploy them — identity, safety, permission, and custody.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="demo.html">See it live — demo</a>
+      <a class="btn btn-ghost" href="#pricing">Pricing</a>
+      <a class="btn btn-ghost" href="#endpoints">Live endpoints</a>
+      <a class="btn btn-ghost" href="#stack">View on GitHub</a>
+    </div>
+  </div>
+
+  <section id="pillars">
+    <h2>The four pillars</h2>
+    <p class="sec-sub">Composable on their own; together they form a trust chain no single tool provides.</p>
+    <div class="pillars">
+      <div class="pillar"><span class="tag tag-a">IDENTITY</span><h3>Inbox</h3><p>Your wallet address IS your email. Deterministic handle, SSRF-safe auto-verification, signed proofs.</p><div class="live">● Live endpoint</div></div>
+      <div class="pillar"><span class="tag tag-b">SAFETY</span><h3>Token Risk</h3><p>Pay-per-call 0–100 risk scoring: market data + contract flags (honeypot, mintable, taxes).</p><div class="live">● Live · charging via x402</div></div>
+      <div class="pillar"><span class="tag tag-c">PERMISSION</span><h3>Authority</h3><p>Least-privilege agent contracts, gates, and an append-only evidence ledger.</p><div class="live">○ Open source</div></div>
+      <div class="pillar"><span class="tag tag-d">CUSTODY</span><h3>Recovery</h3><p>Guardian-threshold key recovery, signed proof-of-custody, verifiable ownership ledger.</p><div class="live">● Live endpoint</div></div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <h2>Free</h2>
+    <p class="sec-sub">Agent Stack is open source and free to use.</p>
+    <div class="pricing">
+      <div class="plan">
+        <h4>Everything</h4><div class="price">$0<span></span></div>
+        <ul>
+          <li>Wallet-address handle derivation</li><li>Token risk API — pay-per-call, free to try</li><li>Managed inbox · verifications · proof</li><li>Authority · evidence ledger · gates</li><li>Recovery · custody · ownership ledger</li><li class="liverow">● Live now · open source · MIT</li>
+        </ul>
+        <div class="buy"><a class="buynav buynav-primary" href="#contact">Free — your wallet address IS your account</a></div>
+      </div>
+    </div>
+    <p class="paynote">No signup, no paywall, no card. Use the stack directly, or reach out to collaborate and support.</p>
+  </section>
+
+  <section id="endpoints">
+    <h2>Live endpoints (verify by curl)</h2>
+    <p class="sec-sub">Every pillar is publicly reachable and tested.</p>
+    <table>
+      <thead><tr><th>Service</th><th>Endpoint</th><th>Check</th></tr></thead>
+      <tbody>
+        <tr><td>Token Risk API</td><td><a href="https://token-risk-api-topaz.vercel.app/health" rel="noopener">token-risk-api-topaz.vercel.app</a></td><td><code>GET /health</code> → paymentMode: live</td></tr>
+        <tr><td>Agent Inbox</td><td><a href="https://agent-inbox-pi.vercel.app/handle/0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA" rel="noopener">agent-inbox-pi.vercel.app</a></td><td><code>GET /handle/&lt;addr&gt;</code> → wallet-email</td></tr>
+        <tr><td>Agent Recovery</td><td><a href="https://agent-recovery.vercel.app/health" rel="noopener">agent-recovery.vercel.app</a></td><td><code>GET /health</code> + <code>/custody/binding</code> → signed proof</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Demo handles / risk checks are stateless; Managed Inbox adds durable persistence. Endpoint responses are wrapped via the client; the underlying APIs return JSON directly.</p>
+  </section>
+
+  <section id="stack">
+    <h2>Open source</h2>
+    <p class="sec-sub">Auditable by design — a trust standard must be. All MIT, on GitHub under prayingperceptions.</p>
+    <div class="stack">
+      <div class="repo"><a href="https://github.com/prayingperceptions/agent-inbox"><b>agent-inbox</b></a> <code>13/13 tests</code><p>Identity + inbox. SSRF allowlist, HMAC-signed proofs, fail-closed.</p></div>
+      <div class="repo"><a href="https://github.com/prayingperceptions/token-risk-api"><b>token-risk-api</b></a> <code>7/7 tests</code><p>Safety. Fail-closed x402 gate, official Bazaar discovery extension.</p></div>
+      <div class="repo"><a href="https://github.com/prayingperceptions/agent-authority"><b>agent-authority</b></a> <code>green</code><p>Permission. Gate, contracts, evidence ledger, red-team tested.</p></div>
+      <div class="repo"><a href="https://github.com/prayingperceptions/agent-recovery"><b>agent-recovery</b></a> <code>18/18 tests</code><p>Custody. Guardian threshold, signed body verification, rotation chain.</p></div>
+    </div>
+    <p class="note">Security audit on file (red-team + pentest): research/security-audit-2026-09-22.md. Production-safety fixes applied across all repos.</p>
+  </section>
+
+  <section id="contact">
+    <h2>Free · open · yours to build on</h2>
+    <p class="sec-sub">No signup, no paywall. If you want to learn more, collaborate, or support Agent Stack, reach out directly:</p>
+    <p style="text-align:center;font-size:22px;font-weight:700"><a href="mailto:prayingperceptions@gmail.com" style="color:var(--accent)">prayingperceptions@gmail.com</a></p>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p>Agent Stack · the open-source rails of the agent economy · MIT · free</p>
+    <p style="margin-top:6px">Built on <a href="https://x402.org" style="color:var(--accent)">x402</a>, <a href="https://base.org" style="color:var(--accent)">Base</a>, and the <a href="https://www.coinbase.com/developer-platform" style="color:var(--accent)">Coinbase CDP</a> facilitator. Learn more or support: <a href="mailto:prayingperceptions@gmail.com" style="color:var(--accent)">prayingperceptions@gmail.com</a></p>
+  </div>
+</footer>
+</body>
+</html>
