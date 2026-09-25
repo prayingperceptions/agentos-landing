@@ -26,12 +26,22 @@
   .step .out{font-family:var(--mono);font-size:12px;white-space:pre-wrap;background:#0b1220;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:8px;max-height:240px;overflow:auto}
   .ok{color:var(--green)} .err{color:var(--red)} .dim{color:var(--muted)} .amber{color:var(--amber)}
   .links{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
-  .links a{font-size:14px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:10px;color:#e5e7eb;background:var(--line)}
-  .links a.repo{background:var(--accent);color:#fff}
-  .links a:hover{opacity:.9}
+  .links a{font-size:14px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:10px;cursor:pointer;border:1.5px solid rgba(255,255,255,.28);white-space:nowrap}
+  .links a:active{transform:translateY(1px)}
+  .links .b-repo{background:#4f46e5;color:#fff}
+  .links .b-live{background:#ba3654;color:#fff}
+  .links .b-tldr{background:#f59e0b;color:#1a1205}
+  .links a:hover{filter:brightness(1.12);border-color:rgba(255,255,255,.5)}
   .step h2 a{text-decoration:none;color:var(--text)}
   .step h2 a:hover{color:var(--green)}
   .github-hint{font-size:11px;color:var(--muted);display:block;margin-top:2px}
+  .tldr-note{display:none;margin-top:10px;font-size:13px;color:var(--text);line-height:1.5;background:#101828;border:1px solid var(--amber);border-radius:8px;padding:10px 12px}
+  .why{background:#0d1520;border:1px solid var(--accent);border-radius:14px;padding:18px 20px;margin:20px 0}
+  .why h2{font-size:16px;font-weight:800;margin-bottom:8px}
+  .why p{font-size:14px;color:var(--text);line-height:1.6}
+  .why p b{color:var(--amber)}
+  .why .why-tags{color:var(--muted);font-size:12px;margin-top:8px}
+  .why .why-tags span{display:inline-block;background:var(--line);color:var(--text);border-radius:999px;padding:2px 10px;margin:0 4px;font-weight:600}
   .footer{color:var(--muted);font-size:12px;margin-top:26px;text-align:center}
   .footer a{color:var(--accent);text-decoration:none}
   .bar{height:4px;background:var(--line);border-radius:999px;margin:18px 0;overflow:hidden}
@@ -46,12 +56,19 @@
 
   <div class="bar"><i id="bar"></i></div>
 
+  <div class="why">
+    <h2>Why Agent Stack matters</h2>
+    <p>AI agents are about to <b>hold keys, spend money, and act on your behalf</b> — but they have no native identity, no built-in safety, and no custody. Without a trusted backbone, the "agent economy" collapses into a walled garden owned by a few platforms. <b>Agent Stack gives every agent four things it can't get on its own:</b> a wallet address as identity, pay-per-call token safety, least-privilege permission, and recoverable custody — open source, so no single company controls trust.</p>
+    <p class="why-tags"><span>Identity</span><span>Safety</span><span>Permission</span><span>Custody</span><span>x402</span><span>Base</span><span>MIT</span></p>
+  </div>
+
   <div class="step" id="s1">
     <h2><span class="n">1</span> <a href="https://github.com/prayingperceptions/token-risk-api" target="_blank" rel="noopener">Safety — a real pay-per-call token risk API</a> <span class="amber" style="font-size:12px">(x402 · Base)</span><span class="github-hint">click title → open repo</span></h2>
     <p class="desc">Call the paid endpoint with no payment and you get a proper <b>HTTP 402 + PAYMENT-REQUIRED</b> — the agent pays USDC on Base to unlock the report. Protocol, not a paywall page.</p>
     <div class="term">$ curl -i "https://token-risk-api-topaz.vercel.app/v1/risk?token=0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"</div>
     <div class="out" id="o1">waiting…</div>
-    <div class="links"><a class="repo" href="https://github.com/prayingperceptions/token-risk-api" target="_blank" rel="noopener">Repo</a><a href="https://token-risk-api-topaz.vercel.app/health" target="_blank" rel="noopener">Live endpoint</a></div>
+    <div class="links"><a class="b-repo" href="https://github.com/prayingperceptions/token-risk-api" target="_blank" rel="noopener">Repo</a><a class="b-live" href="https://token-risk-api-topaz.vercel.app/health" target="_blank" rel="noopener">Live endpoint</a><a class="b-tldr" href="#" onclick="tldr('t1');return false;">TLDR</a></div>
+    <div class="tldr-note" id="t1"><b>TLDR — Token Risk:</b> checks whether a token is safe to buy — liquidity, age, and contract flags (honeypot, mintable, taxes) — and charges per call over x402 on Base, so any agent can affordably vet before transacting.</div>
   </div>
 
   <div class="step" id="s2">
@@ -59,7 +76,8 @@
     <p class="desc">A stable, human-readable handle is derived deterministically from a wallet. No signup, no account — the address is the identity.</p>
     <div class="term">$ curl "https://agent-inbox-pi.vercel.app/handle/0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA"</div>
     <div class="out" id="o2">waiting…</div>
-    <div class="links"><a class="repo" href="https://github.com/prayingperceptions/agent-inbox" target="_blank" rel="noopener">Repo</a><a href="https://agent-inbox-pi.vercel.app/handle/0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA" target="_blank" rel="noopener">Live endpoint</a></div>
+    <div class="links"><a class="b-repo" href="https://github.com/prayingperceptions/agent-inbox" target="_blank" rel="noopener">Repo</a><a class="b-live" href="https://agent-inbox-pi.vercel.app/handle/0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA" target="_blank" rel="noopener">Live endpoint</a><a class="b-tldr" href="#" onclick="tldr('t2');return false;">TLDR</a></div>
+    <div class="tldr-note" id="t2"><b>TLDR — Identity:</b> your wallet address becomes your email/handle (e.g. <code>…@agents.inbox</code>), derived deterministically and phishing-safe — no signup, no account, the address IS the identity.</div>
   </div>
 
   <div class="step" id="s3">
@@ -67,7 +85,8 @@
     <p class="desc">Return the signed custody binding for an agent + deployer. Verifiable ownership, on demand.</p>
     <div class="term">$ curl "https://agent-recovery.vercel.app/custody/binding?agent=0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA&amp;deployer=0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA"</div>
     <div class="out" id="o3">waiting…</div>
-    <div class="links"><a class="repo" href="https://github.com/prayingperceptions/agent-recovery" target="_blank" rel="noopener">Repo</a><a href="https://agent-recovery.vercel.app/custody/binding?agent=0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA&amp;deployer=0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA" target="_blank" rel="noopener">Live endpoint</a></div>
+    <div class="links"><a class="b-repo" href="https://github.com/prayingperceptions/agent-recovery" target="_blank" rel="noopener">Repo</a><a class="b-live" href="https://agent-recovery.vercel.app/custody/binding?agent=0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA&amp;deployer=0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA" target="_blank" rel="noopener">Live endpoint</a><a class="b-tldr" href="#" onclick="tldr('t3');return false;">TLDR</a></div>
+    <div class="tldr-note" id="t3"><b>TLDR — Custody:</b> guardian-threshold key recovery with a signed, verifiable proof of ownership — so if you lose access, trusted guardians can recover the agent, and any tampering is detectable.</div>
   </div>
 
   <div class="step" id="s4">
@@ -75,7 +94,17 @@
     <p class="desc">Evaluate an action request against a contract. The gate returns <b>allow</b>, <b>ask</b> (human approval needed), or <b>deny</b> — least-privilege, fail-closed.</p>
     <div class="term">$ curl -X POST "https://agent-authority-beige.vercel.app/evaluate" -H 'content-type: application/json' -d '{ contract, request }'</div>
     <div class="out" id="o4">waiting…</div>
-    <div class="links"><a class="repo" href="https://github.com/prayingperceptions/agent-authority" target="_blank" rel="noopener">Repo</a><a href="https://agent-authority-beige.vercel.app/evaluate" target="_blank" rel="noopener">Live endpoint</a></div>
+    <div class="links"><a class="b-repo" href="https://github.com/prayingperceptions/agent-authority" target="_blank" rel="noopener">Repo</a><a class="b-live" href="https://agent-authority-beige.vercel.app/evaluate" target="_blank" rel="noopener">Live endpoint</a><a class="b-tldr" href="#" onclick="tldr('t4');return false;">TLDR</a></div>
+    <div class="tldr-note" id="t4"><b>TLDR — Permission:</b> a smart contract decides what an agent may do — returning <b>allow</b>, <b>ask</b> (human approval), or <b>deny</b> per action. Least-privilege, fail-closed, and every decision is auditable.</div>
+  </div>
+
+  <div class="step" id="s5">
+    <h2><span class="n">5</span> <a href="https://github.com/prayingperceptions/agent-launch" target="_blank" rel="noopener">Launch — 0.5% protocol fee on deployed tokens</a> <span class="ok" style="font-size:12px">(agent-launch)</span><span class="github-hint">click title → open repo</span></h2>
+    <p class="desc">Deploy a token and <b>0.5% of supply is minted on-chain to the protocol recipient</b> — transparent, disclosed, fail-closed. The fee pays for the safe-launch rail, not a hidden cut.</p>
+    <div class="term">$ curl -X POST "https://endpoint-jubilee-labs.vercel.app/launch" -H 'content-type: application/json' -d '{ name, symbol, supply }'</div>
+    <div class="out" id="o5">waiting…</div>
+    <div class="links"><a class="b-repo" href="https://github.com/prayingperceptions/agent-launch" target="_blank" rel="noopener">Repo</a><a class="b-live" href="https://endpoint-jubilee-labs.vercel.app/fee/rate" target="_blank" rel="noopener">Live endpoint</a><a class="b-tldr" href="#" onclick="tldr('t5');return false;">TLDR</a></div>
+    <div class="tldr-note" id="t5"><b>TLDR — Launch:</b> any token deployed through Agent Launch mints <b>0.5% of supply to the protocol recipient</b> (<code>0x2091…5DeA</code>) at deploy — one-time, disclosed on-chain, and it fails closed if the fee would underflow. Safe rail, not a sniper bot.</div>
   </div>
 
   <div class="footer">
@@ -84,7 +113,14 @@
 </div>
 
 <script>
-const steps = ["s1","s2","s3","s4"];
+function tldr(id){
+  var el = document.getElementById(id);
+  var open = el.style.display === "block";
+  var els = document.querySelectorAll(".tldr-note");
+  for (var i=0;i<els.length;i++) els[i].style.display = "none";
+  el.style.display = open ? "none" : "block";
+}
+const steps = ["s1","s2","s3","s4","s5"];
 const bar = document.getElementById("bar");
 function out(id, text, cls) {
   const el = document.getElementById(id); el.innerHTML = "";
@@ -110,11 +146,15 @@ async function run(i){
       const r = await fetch("https://agent-recovery.vercel.app/custody/binding?agent=0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA&deployer=0x2091125bFE4259b2CfA889165Beb6290d0Df5DeA",{headers:{Accept:"application/json"}});
       const j = await r.json().catch(()=>({}));
       out("o3", JSON.stringify(j,null,2), j.signature||j.binding?"ok":"err");
-    } else {
+    } else if(i===3){
       const c = { version:"0.1", contractId:"contract_live", subjectAgentId:"agent_alice", issuer:"issuer_corp", purpose:"live demo", createdAt:new Date(Date.now()-60000).toISOString(), expiresAt:new Date(Date.now()+3600000).toISOString(), capabilities:[{ resource:"box", actions:["read"], constraints:{ cwd:"workspace" }, decision:"allow" }] };
       const r = await fetch("https://agent-authority-beige.vercel.app/evaluate",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({contract:c,request:{agentId:"agent_alice",resource:"box",action:"read",input:{cwd:"workspace"}}})});
       const j = await r.json().catch(()=>({}));
       out("o4", JSON.stringify(j,null,2), j.decision?"ok":"err");
+    } else {
+      const r = await fetch("https://endpoint-jubilee-labs.vercel.app/launch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name:"Agent Token",symbol:"AGT",supply:1000000})});
+      const j = await r.json().catch(()=>({}));
+      out("o5", JSON.stringify(j,null,2), j.fee&&j.ok?"ok":"err");
     }
   } catch(e){ out("o"+(i+1), "ERROR: "+e.message, "err"); }
   el.classList.remove("active"); el.classList.add("done");
