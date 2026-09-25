@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent DEX — launch · pool · trade</title>
+<script src="wallets.js"></script>
+<style>
+:root{--bg:#0b0e14;--card:#151a24;--card2:#101522;--text:#e6e9f0;--muted:#8b94a5;--green:#3dd68c;--red:#ff5c66;--accent:#5b8cff;--border:#2a3040;--purple:#8a5cf0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14.5px/1.5 system-ui,-apple-system,Segoe UI,Roboto}
+.wrap{max-width:1000px;margin:0 auto;padding:20px}
+/* Uniswap-style top bar: nav left, Connect right */
+.top{display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);padding:14px 20px}
+.brand{font-weight:800;font-size:17px;color:var(--text)}
+.brand .emo{font-size:18px}
+nav a{color:var(--muted);margin-left:12px;text-decoration:none;font-size:14px;font-weight:600}
+nav a:hover{color:var(--text)}
+.spacer{flex:1}
+.btn-connect{background:var(--text);color:#0b0e14;border:0;border-radius:24px;padding:9px 18px;font-weight:700;cursor:pointer}
+.btn-connect.connected{background:var(--green);color:#06210f}
+.wallet-chip{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:12px;color:var(--green)}
+h2{font-size:15px;color:var(--text);margin:0 0 4px}
+.muted{color:var(--muted);font-size:12.5px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin:14px 0}
+.tabs{display:flex;gap:6px}
+.tab{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:7px 14px;font-weight:600;cursor:pointer}
+.tab.on{background:var(--card2);color:var(--text);border-color:var(--accent)}
+/* Trade card (Uniswap Swap style) */
+.pane{display:none}.pane.on{display:block}
+.field{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.field .lab{font-size:12px;color:var(--muted)}
+.field input{background:transparent;border:0;color:var(--text);font-size:20px;font-weight:700;width:180px}
+.field .sel{display:flex;align-items:center;gap:8px}
+.token-btn{background:#232c3d;border:1px solid var(--border);border-radius:18px;padding:6px 12px;font-weight:600;cursor:pointer}
+.arrow{text-align:center;color:var(--accent);font-size:18px;margin:6px}
+.btn-main{width:100%;background:var(--green);color:#06210f;border:0;border-radius:12px;padding:13px;font-weight:800;font-size:15px;cursor:pointer}
+.btn-main:disabled{background:#2a3344;color:var(--muted);cursor:not-allowed}
+.btn-ghost{width:100%;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:12px;padding:12px;font-weight:700;cursor:pointer}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px}
+.stat b{display:block;font-size:18px}.stat span{font-size:11px;color:var(--muted)}
+details{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin:8px 0}
+summary{font-weight:700;cursor:pointer;color:var(--text)}
+pre{background:#0a0f17;border:1px solid var(--border);border-radius:8px;padding:10px;overflow:auto;font-size:12px}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="top">
+  <span class="brand"><span class="emo">🍞</span> Agent DEX</span>
+  <nav><a href="#trade" data-tab="trade">Trade</a><a href="#pool" data-tab="pool">Pool</a><a href="index.html">Home</a><a href="#faq" data-tab="faq">FAQ</a></nav>
+  <span class="spacer"></span>
+  <span class="wallet-chip" id="wlchip" style="display:none"></span>
+  <button class="btn-connect" id="btnConn">Connect wallet</button>
+</div>
+<div class="wrap">
+
+  <div class="card stat-grid">
+    <div class="stat"><span>24h Volume</span><b id="vvol">…</b></div>
+    <div class="stat"><span>TVL</span><b id="vtvl">…</b></div>
+    <div class="stat"><span>Trades</span><b id="vtrades">…</b></div>
+    <div class="stat"><span>Price</span><b id="vprice">…</b></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" data-tab="trade">Trade</button>
+    <button class="tab" data-tab="pool">Pool (add liquidity)</button>
+    <button class="tab" data-tab="faq">FAQ</button>
+  </div>
+
+  <!-- TRADE (Uniswap Swap-style) -->
+  <section class="pane on" id="pane-trade">
+    <div class="card">
+      <div class="field">
+        <div><div class="lab">Sell</div><input id="sellAmt" value="0" inputmode="decimal"></div>
+        <div class="sel"><button class="token-btn" id="sellTokBtn">USDC</button></div>
+      </div>
+      <div class="arrow">⇅</div>
+      <div class="field">
+        <div><div class="lab">Buy</div><input id="buyAmt" value="" inputmode="decimal" disabled></div>
+        <div class="sel"><button class="token-btn" id="buyTokBtn">CPT</button></div>
+      </div>
+      <p class="muted" id="tradeFee">0.05% trade fee → protocol; half accrues to LPs.</p>
+      <button class="btn-main" id="btnTrade" disabled>Connect a wallet to trade</button>
+    </div>
+  </section>
+
+  <!-- POOL / LP -->
+  <section class="pane" id="pane-pool">
+    <div class="card">
+      <h2>Add liquidity <span class="muted">— earn half the 0.05% swap fee by your share</span></h2>
+      <div class="field"><div><div class="lab">USDC to add</div><input id="lpAmt" value="0" inputmode="decimal"></div><div class="sel"><button class="token-btn">USDC</button></div></div>
+      <p class="muted" id="lpNote">First deposit defines the pool; later deposits earn pro-rata LP shares. Claim via <code>claimLp</code>.</p>
+      <button class="btn-main" id="btnLP" disabled>Connect a wallet to add liquidity</button>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="pane" id="pane-faq">
+    <details><summary>Where do I connect my wallet to transact?</summary>
+      Click <b>Connect wallet</b> (top-right). We detect MetaMask / Rainbow / Coinbase Wallet / injected providers (EIP-1193 + <code>eth_accounts</code>), or you can paste any <code>0x…</code> address to act manually. Once connected, Trade + Pool become available and your address is shown in the chip.
+    </details>
+    <details><summary>How do agents transact? (do they need a wallet?)</summary>
+      Agents don't use the browser wallet. An agent pays <b>per call over x402</b>: it sends an <code>X-Payment</code> header (settled by a facilitator in Base USDC) to <code>POST /launch</code>. On-chain <code>buy</code>/<code>sell</code> are signed by the agent's own key. So: <b>humans connect a wallet; agents pay x402</b> — same venue, two rails.
+    </details>
+    <details><summary>What are the fees?</summary>
+      Launth 0.5% of supply · listing 0.5% of the seed quote · trade 0.05% per swap (half → protocol, half → LP holders). All disclosed at <a href="https://agent-dex-eight.vercel.app/fee/rate" target="_blank" rel="noopener">/fee/rate</a>.
+    </details>
+    <details><summary>How do I launch a token?</summary>
+      Use the <a href="launch.html">launch UI</a>: name → symbol → supply → see the 1/0.5/0.5/98 split → sign the on-chain launch. Your 0.5% receipt is pooled as an LP position that earns.
+    </details>
+    <details><summary>What's the launch split?</summary>
+      1% deployer · 0.5% protocol · 0.5% lottery escrow (→ one wallet after ≥100 traders) · 98% tradable float. Total 100%, conserved.
+    </details>
+    <details><summary>Is my token listed on other Base DEXes?</summary>
+      Not automatically. CPT lives in this venue only. External listing (Uniswap/Aerodrome) needs a v2 wrapper or separate liquidity provision there — on the roadmap.
+    </details>
+  </section>
+  <pre id="cmd" style="display:none"></pre>
+</div>
+
+<script>
+const STATS='https://agent-dex-eight.vercel.app/stats';
+const DEX='0xB1a77D1CEBb2BdF7A1Dd12758992BfC1408de996';
+const CPT='0xad3dc01fE083dEF0F3e7DE0F2164865494eB0322';
+const USDC='0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+const fmt=(n)=>{try{const b=BigInt(n);return b>0n?b.toString():'0';}catch{return String(n)}};
+const $=(s)=>document.querySelector(s);
+const state=window.DexWallet;
+
+// tab switch
+function tab(ev){const t=ev.currentTarget?ev.currentTarget.dataset.tab:ev;document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));const p=$('#pane-'+t);if(p)p.classList.add('on');}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',tab));
+document.querySelectorAll('nav a[data-tab]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();tab(e.currentTarget.dataset.tab);}));
+
+// wallet connect
+async function connectFlow(){
+  const st=state.state();
+  let prov=null;
+  if(st.detected.length){prov=st.detected[0];}
+  if(!prov){const a=prompt('No browser wallet detected. Paste any 0x address to continue (or cancel):');if(a&&a.trim()){const r=state.connectManual(a.trim());if(r.ok)return renderConn(r);else alert('Invalid address');return;}return;}
+  const r=await state.connect(prov);
+  if(r.ok)renderConn(r);else {const a=prompt('Wallet error: '+r.error+'. Paste a 0x address to act manually:');if(a&&a.trim()){const m=state.connectManual(a.trim());if(m.ok)renderConn(m);}}
+}
+function renderConn(r){
+  $('#btnConn').textContent='✓ '+(r.address.slice(0,6)+'…'+r.address.slice(-4));
+  $('#btnConn').classList.remove('btn-connect');$('#btnConn').classList.add('connected');
+  const c=$('#wlchip');c.style.display='inline-block';c.textContent=r.provider;
+  $('#btnTrade').disabled=false;$('#btnLP').disabled=false;
+  $('#btnTrade').textContent='Trade USDC → CPT';
+  $('#btnLP').textContent='Add USDC liquidity';
+}
+$('#btnConn').addEventListener('click',connectFlow);
+
+// trade simulator (fee math, honest on-chain copy for a real signer)
+$('#sellAmt').addEventListener('input',()=>{
+  const q=BigInt(Math.max(0,Number($('#sellAmt').value)||0));
+  $('#tradeFee').textContent=q>0n?('0.05% trade fee → protocol ('+((q*5n/10000n)).toString()+' to protocol), pool price per current reserves.'):'0.05% trade fee → protocol; half accrues to LPs.';
+});
+
+// live stats
+async function refreshStats(){
+  try{const j=await (await fetch(STATS)).json();
+    $('#vvol').textContent=fmt(j.volume24h);$('#vtvl').textContent=fmt(j.tvl);
+    $('#vtrades').textContent=fmt(j.trades);
+    $('#vprice').textContent=fmt(j.price&&typeof j.price==='object'?j.price.perTokenQuoteScale18:j.price);
+  }catch{/* offline */}
+}
+refreshStats();setInterval(refreshStats,30000);
+</script>
+</body>
+</html>
