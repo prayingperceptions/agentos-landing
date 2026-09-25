@@ -3,170 +3,322 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Agent DEX — launch · pool · trade</title>
+<title>Agent DEX — launch · pool · trade · Base</title>
 <script src="wallets.js"></script>
 <style>
-:root{--bg:#0b0e14;--card:#151a24;--card2:#101522;--text:#e6e9f0;--muted:#8b94a5;--green:#3dd68c;--red:#ff5c66;--accent:#5b8cff;--border:#2a3040;--purple:#8a5cf0}
+:root{--bg:#0b0e14;--card:#151a24;--card2:#101522;--text:#e6e9f0;--muted:#8b94a5;--green:#3dd68c;--red:#ff5c66;--accent:#5b8cff;--border:#2a3040}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14.5px/1.5 system-ui,-apple-system,Segoe UI,Roboto}
 .wrap{max-width:1000px;margin:0 auto;padding:20px}
-/* Uniswap-style top bar: nav left, Connect right */
-.top{display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);padding:14px 20px}
-.brand{font-weight:800;font-size:17px;color:var(--text)}
-.brand .emo{font-size:18px}
-nav a{color:var(--muted);margin-left:12px;text-decoration:none;font-size:14px;font-weight:600}
-nav a:hover{color:var(--text)}
+.top{display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);padding:14px 20px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:17px}.emo{font-size:18px}
+nav a{color:var(--muted);margin-left:12px;text-decoration:none;font-weight:600}nav a:hover{color:var(--text)}
 .spacer{flex:1}
 .btn-connect{background:var(--text);color:#0b0e14;border:0;border-radius:24px;padding:9px 18px;font-weight:700;cursor:pointer}
 .btn-connect.connected{background:var(--green);color:#06210f}
 .wallet-chip{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:12px;color:var(--green)}
-h2{font-size:15px;color:var(--text);margin:0 0 4px}
-.muted{color:var(--muted);font-size:12.5px}
+.net-badge{background:#14532d;color:#8deb9a;border:1px solid #2a6b3c;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700}
+.net-badge.off{background:#4a2d14;color:#ffd18a;border-color:#7a4a1c}
+h2{font-size:15px;margin:0 0 4px}.muted{color:var(--muted);font-size:12.5px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin:14px 0}
-.tabs{display:flex;gap:6px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tab{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:7px 14px;font-weight:600;cursor:pointer}
 .tab.on{background:var(--card2);color:var(--text);border-color:var(--accent)}
-/* Trade card (Uniswap Swap style) */
 .pane{display:none}.pane.on{display:block}
 .field{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
 .field .lab{font-size:12px;color:var(--muted)}
-.field input{background:transparent;border:0;color:var(--text);font-size:20px;font-weight:700;width:180px}
-.field .sel{display:flex;align-items:center;gap:8px}
-.token-btn{background:#232c3d;border:1px solid var(--border);border-radius:18px;padding:6px 12px;font-weight:600;cursor:pointer}
+.field input{background:transparent;border:0;color:var(--text);font-size:20px;font-weight:700;width:170px}
+.token-btn{background:#232c3d;border:1px solid var(--border);border-radius:18px;padding:6px 12px;font-weight:600}
 .arrow{text-align:center;color:var(--accent);font-size:18px;margin:6px}
 .btn-main{width:100%;background:var(--green);color:#06210f;border:0;border-radius:12px;padding:13px;font-weight:800;font-size:15px;cursor:pointer}
 .btn-main:disabled{background:#2a3344;color:var(--muted);cursor:not-allowed}
-.btn-ghost{width:100%;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:12px;padding:12px;font-weight:700;cursor:pointer}
+.btn-op{width:100%;background:var(--accent);color:#0b1424;border:0;border-radius:12px;padding:13px;font-weight:800;font-size:15px;cursor:pointer}
+.btn-op:disabled{background:#232c3d;color:var(--muted);cursor:not-allowed}
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
 .stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px}
-.stat b{display:block;font-size:18px}.stat span{font-size:11px;color:var(--muted)}
+.stat b{display:block;font-size:17px}.stat span{font-size:11px;color:var(--muted)}
+.row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1c2331}
 details{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin:8px 0}
-summary{font-weight:700;cursor:pointer;color:var(--text)}
+summary{font-weight:700;cursor:pointer}
 pre{background:#0a0f17;border:1px solid var(--border);border-radius:8px;padding:10px;overflow:auto;font-size:12px}
 a{color:var(--accent)}
+.note{background:#12203a;border:1px solid var(--accent);border-radius:10px;padding:10px 12px;font-size:12.5px;margin-top:10px;color:#cfe0ff}
+.warn{background:#3a1515;border:1px solid #6a2424;border-radius:10px;padding:10px 12px;font-size:12.5px;margin-top:10px;color:#ffcccc}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50}
+.modal.on{display:flex}.modal-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;width:340px}
+.wallet-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px;margin:6px 0;cursor:pointer;font-size:14px;color:var(--text)}
+.wallet-row:hover{border-color:var(--accent)}.wallet-row .ic{font-size:22px}
+.manual{margin-top:12px}.manual input{width:100%;background:#0e1420;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px;margin-top:6px;font-size:13px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1b2434;border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:10px;font-size:13px;display:none;z-index:60;max-width:90%}
 </style>
 </head>
 <body>
 <div class="top">
   <span class="brand"><span class="emo">🍞</span> Agent DEX</span>
-  <nav><a href="#trade" data-tab="trade">Trade</a><a href="#pool" data-tab="pool">Pool</a><a href="index.html">Home</a><a href="#faq" data-tab="faq">FAQ</a></nav>
+  <nav><a href="index.html">Home</a><a href="launch.html">Launch</a><a href="demo.html">Demo</a></nav>
   <span class="spacer"></span>
+  <span class="net-badge" id="netBadge">Base · mainnet</span>
   <span class="wallet-chip" id="wlchip" style="display:none"></span>
   <button class="btn-connect" id="btnConn">Connect wallet</button>
 </div>
 <div class="wrap">
-
-  <div class="card stat-grid">
+  <div class="card stat-grid" style="margin-top:14px">
     <div class="stat"><span>24h Volume</span><b id="vvol">…</b></div>
-    <div class="stat"><span>TVL</span><b id="vtvl">…</b></div>
+    <div class="stat"><span>TVL (USDC)</span><b id="vtvl">…</b></div>
     <div class="stat"><span>Trades</span><b id="vtrades">…</b></div>
     <div class="stat"><span>Price</span><b id="vprice">…</b></div>
   </div>
 
   <div class="tabs">
     <button class="tab on" data-tab="trade">Trade</button>
-    <button class="tab" data-tab="pool">Pool (add liquidity)</button>
+    <button class="tab" data-tab="pool">Pool</button>
     <button class="tab" data-tab="faq">FAQ</button>
   </div>
 
-  <!-- TRADE (Uniswap Swap-style) -->
   <section class="pane on" id="pane-trade">
     <div class="card">
       <div class="field">
-        <div><div class="lab">Sell</div><input id="sellAmt" value="0" inputmode="decimal"></div>
-        <div class="sel"><button class="token-btn" id="sellTokBtn">USDC</button></div>
+        <div><div class="lab">You pay</div><input id="sellAmt" inputmode="decimal" placeholder="0.00"></div>
+        <div class="sel"><button class="token-btn">USDC</button></div>
       </div>
       <div class="arrow">⇅</div>
       <div class="field">
-        <div><div class="lab">Buy</div><input id="buyAmt" value="" inputmode="decimal" disabled></div>
-        <div class="sel"><button class="token-btn" id="buyTokBtn">CPT</button></div>
+        <div><div class="lab">You receive</div><input id="buyAmt" disabled placeholder="0.00"></div>
+        <div class="sel"><button class="token-btn">CPT</button></div>
       </div>
-      <p class="muted" id="tradeFee">0.05% trade fee → protocol; half accrues to LPs.</p>
+      <p class="muted" id="tradeFee">0.05% trade fee → protocol; live pool price applies.</p>
       <button class="btn-main" id="btnTrade" disabled>Connect a wallet to trade</button>
+      <div class="warn" id="tradeWarn">
+        This is an early, auditable-open-source venue on Base. Transactions move real funds —
+        review each wallet prompt before signing. If your wallet shows a security warning, that's
+        an automated heuristic on a new domain, not a known threat; see the FAQ.
+      </div>
     </div>
   </section>
 
-  <!-- POOL / LP -->
   <section class="pane" id="pane-pool">
     <div class="card">
-      <h2>Add liquidity <span class="muted">— earn half the 0.05% swap fee by your share</span></h2>
-      <div class="field"><div><div class="lab">USDC to add</div><input id="lpAmt" value="0" inputmode="decimal"></div><div class="sel"><button class="token-btn">USDC</button></div></div>
-      <p class="muted" id="lpNote">First deposit defines the pool; later deposits earn pro-rata LP shares. Claim via <code>claimLp</code>.</p>
-      <button class="btn-main" id="btnLP" disabled>Connect a wallet to add liquidity</button>
+      <h2>Pool — add USDC, earn <span class="muted">half the 0.05% swap fee</span></h2>
+      <div class="row"><span class="muted">Pool TVL (USDC)</span><b id="p_tvl">…</b></div>
+      <div class="row"><span class="muted">Reserve USDC</span><b id="p_rq">…</b></div>
+      <div class="row"><span class="muted">Reserve CPT</span><b id="p_rt">…</b></div>
+      <div class="row"><span class="muted">Liquidity price (USDC/CPT)</span><b id="p_px">…</b></div>
+      <div class="row"><span class="muted">Your LP shares</span><b id="p_shares">—</b></div>
+      <div class="row"><span class="muted">Your accrued fee</span><b id="p_earned">—</b></div>
+      <div class="field" style="margin-top:12px"><div><div class="lab">USDC to add</div><input id="lpAmt" inputmode="decimal" placeholder="0"></div><div class="sel"><button class="token-btn">USDC</button></div></div>
+      <button class="btn-op" id="btnLP" disabled>Connect a wallet to add liquidity</button>
+      <button class="btn-op" id="btnClaim" disabled style="margin-top:8px;background:#24324a;color:#cfe0ff">Claim my earned fees</button>
+      <div class="note" id="poolNote" style="display:none"></div>
     </div>
   </section>
 
-  <!-- FAQ -->
   <section class="pane" id="pane-faq">
     <details><summary>Where do I connect my wallet to transact?</summary>
-      Click <b>Connect wallet</b> (top-right). We detect MetaMask / Rainbow / Coinbase Wallet / injected providers (EIP-1193 + <code>eth_accounts</code>), or you can paste any <code>0x…</code> address to act manually. Once connected, Trade + Pool become available and your address is shown in the chip.
+      Click <b>Connect wallet</b> (top-right) and pick your wallet — Rainbow, MetaMask, Coinbase,
+      OKX or Brave. We switch it to <b>Base mainnet</b> automatically. Or paste an address to act manually.
     </details>
-    <details><summary>How do agents transact? (do they need a wallet?)</summary>
-      Agents don't use the browser wallet. An agent pays <b>per call over x402</b>: it sends an <code>X-Payment</code> header (settled by a facilitator in Base USDC) to <code>POST /launch</code>. On-chain <code>buy</code>/<code>sell</code> are signed by the agent's own key. So: <b>humans connect a wallet; agents pay x402</b> — same venue, two rails.
+    <details><summary>How do agents transact? Do they need a wallet?</summary>
+      Agents don't use a browser wallet — they pay per call over <b>x402</b> (an <code>X-Payment</code>
+      header settled in Base USDC) to <code>POST /launch</code>, or sign on-chain <code>buy</code>/
+      <code>sell</code> with their own key. Humans connect a wallet; agents pay x402. Two rails, one venue.
+    </details>
+    <details><summary>Why did my wallet flag this site? Is it safe?</summary>
+      Wallet extensions flag new, wallet-connecting domains with an automated heuristic until they
+      build reputation. The venue is <b>open source</b> (forkable, auditable) on Base. The warning is
+      not proof of a real threat — but review every prompt and trade at your own risk. A custom domain
+      + longer uptime clears most heuristics over time.
     </details>
     <details><summary>What are the fees?</summary>
-      Launth 0.5% of supply · listing 0.5% of the seed quote · trade 0.05% per swap (half → protocol, half → LP holders). All disclosed at <a href="https://agent-dex-eight.vercel.app/fee/rate" target="_blank" rel="noopener">/fee/rate</a>.
-    </details>
-    <details><summary>How do I launch a token?</summary>
-      Use the <a href="launch.html">launch UI</a>: name → symbol → supply → see the 1/0.5/0.5/98 split → sign the on-chain launch. Your 0.5% receipt is pooled as an LP position that earns.
+      Launch 0.5% · listing 0.5% of seed · trade 0.05% per swap (half → protocol, half → LPs).
+      Disclosed at <a href="https://agent-dex-eight.vercel.app/fee/rate" target="_blank" rel="noopener">/fee/rate</a>.
     </details>
     <details><summary>What's the launch split?</summary>
-      1% deployer · 0.5% protocol · 0.5% lottery escrow (→ one wallet after ≥100 traders) · 98% tradable float. Total 100%, conserved.
+      1% deployer · 0.5% protocol · 0.5% lottery escrow (→ one wallet after ≥100 traders) · 98% float.
+      Total 100%, conserved.
     </details>
-    <details><summary>Is my token listed on other Base DEXes?</summary>
-      Not automatically. CPT lives in this venue only. External listing (Uniswap/Aerodrome) needs a v2 wrapper or separate liquidity provision there — on the roadmap.
+    <details><summary>Is my token on other Base DEXes?</summary>
+      Not automatically — CPT lives in this venue. External listing needs a v2 wrapper or separate
+      liquidity provision. On the roadmap.
     </details>
   </section>
-  <pre id="cmd" style="display:none"></pre>
 </div>
 
+<div class="modal" id="wmodal">
+  <div class="modal-card">
+    <h2 style="margin-bottom:6px">Connect a wallet</h2>
+    <p class="muted" style="margin-top:0">This app runs on <b>Base mainnet</b> (chainId 8453).</p>
+    <div id="wlist"></div>
+    <div class="manual">
+      <label class="muted">No browser wallet? Paste an address</label>
+      <input id="manualAddr" placeholder="0x…">
+      <button class="btn-main" id="btnManual" style="margin-top:8px">Use this address</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
 <script>
-const STATS='https://agent-dex-eight.vercel.app/stats';
+const $=s=>document.querySelector(s);
 const DEX='0xB1a77D1CEBb2BdF7A1Dd12758992BfC1408de996';
 const CPT='0xad3dc01fE083dEF0F3e7DE0F2164865494eB0322';
 const USDC='0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-const fmt=(n)=>{try{const b=BigInt(n);return b>0n?b.toString():'0';}catch{return String(n)}};
-const $=(s)=>document.querySelector(s);
-const state=window.DexWallet;
+const POOL='0x8ad4cd81dcbea0ccf1098ac8a42f9040506ebb7d';
+const CN='https://mainnet.base.org';
+const W=window.DexWallet;
+const MAXU=(2n**256n-1n).toString();
+// exact selectors (cast sig)
+const SEL_BUY='0xdb61c76e';                 // buy(address,uint256,address)
+const SEL_APPROVE='0x095ea7b3';             // approve(address,uint256)
+const SEL_ALLOW='0xdd62ed3e';               // allowance(address,address)
+const SEL_ADD='0x51c6590a';                 // addLiquidity(uint256)
+const SEL_CLAIM='0x61e0d90c';               // claimLp(address)
+const SEL_SHARES='0xc109a6dc';              // lpShares(address)
+const SEL_EARNED='0x008cc262';              // earned(address)
+const SEL_RQ='0x93778609', SEL_RT='0xf4325d67', SEL_PX='0xa035b1fe';
 
-// tab switch
-function tab(ev){const t=ev.currentTarget?ev.currentTarget.dataset.tab:ev;document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));const p=$('#pane-'+t);if(p)p.classList.add('on');}
-document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',tab));
-document.querySelectorAll('nav a[data-tab]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();tab(e.currentTarget.dataset.tab);}));
+function toast(m){const e=$('#toast');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',4600);}
+function setv(id,v){$(id).textContent=v;}
+function pad(w){return w.padStart(64,'0')}
+function addr(a){return pad(a.slice(2).toLowerCase())}
+function uint(x){return pad(BigInt(x).toString(16))}
 
-// wallet connect
-async function connectFlow(){
-  const st=state.state();
-  let prov=null;
-  if(st.detected.length){prov=st.detected[0];}
-  if(!prov){const a=prompt('No browser wallet detected. Paste any 0x address to continue (or cancel):');if(a&&a.trim()){const r=state.connectManual(a.trim());if(r.ok)return renderConn(r);else alert('Invalid address');return;}return;}
-  const r=await state.connect(prov);
-  if(r.ok)renderConn(r);else {const a=prompt('Wallet error: '+r.error+'. Paste a 0x address to act manually:');if(a&&a.trim()){const m=state.connectManual(a.trim());if(m.ok)renderConn(m);}}
+async function rpc(method,params){
+  const r=await fetch(CN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})});
+  const j=await r.json(); if(j.error) throw new Error(j.error.message); return j.result;
 }
-function renderConn(r){
-  $('#btnConn').textContent='✓ '+(r.address.slice(0,6)+'…'+r.address.slice(-4));
-  $('#btnConn').classList.remove('btn-connect');$('#btnConn').classList.add('connected');
-  const c=$('#wlchip');c.style.display='inline-block';c.textContent=r.provider;
-  $('#btnTrade').disabled=false;$('#btnLP').disabled=false;
-  $('#btnTrade').textContent='Trade USDC → CPT';
-  $('#btnLP').textContent='Add USDC liquidity';
-}
-$('#btnConn').addEventListener('click',connectFlow);
+const ethCall=(to,data)=>rpc('eth_call',[{to,data},'latest']);
+const b256=h=>{try{return BigInt(h||'0x0').toString()}catch{return '0'}};
 
-// trade simulator (fee math, honest on-chain copy for a real signer)
-$('#sellAmt').addEventListener('input',()=>{
-  const q=BigInt(Math.max(0,Number($('#sellAmt').value)||0));
-  $('#tradeFee').textContent=q>0n?('0.05% trade fee → protocol ('+((q*5n/10000n)).toString()+' to protocol), pool price per current reserves.'):'0.05% trade fee → protocol; half accrues to LPs.';
-});
-
-// live stats
 async function refreshStats(){
-  try{const j=await (await fetch(STATS)).json();
-    $('#vvol').textContent=fmt(j.volume24h);$('#vtvl').textContent=fmt(j.tvl);
-    $('#vtrades').textContent=fmt(j.trades);
-    $('#vprice').textContent=fmt(j.price&&typeof j.price==='object'?j.price.perTokenQuoteScale18:j.price);
-  }catch{/* offline */}
+  try{
+    const j=await (await fetch('https://agent-dex-eight.vercel.app/stats')).json();
+    setv('vvol',b256(j.volume24h)); setv('vtvl',b256(j.tvl)); setv('vtrades',b256(j.trades));
+    const p=(j.price&&typeof j.price==='object')?j.price.perTokenQuoteScale18:(j.price||'0');
+    setv('vprice',b256(p));
+  }catch(e){}
 }
-refreshStats();setInterval(refreshStats,30000);
+async function refreshPool(){
+  try{
+    const rq=b256(await ethCall(POOL,SEL_RQ)); const rt=b256(await ethCall(POOL,SEL_RT));
+    const px=b256(await ethCall(POOL,SEL_PX));
+    setv('p_tvl',rq); setv('p_rq',rq); setv('p_rt',rt); setv('p_px',px);
+    const st=W.state();
+    if(st.address){
+      const a=addr(st.address);
+      setv('p_shares',b256(await ethCall(POOL,SEL_SHARES+a)));
+      setv('p_earned',b256(await ethCall(POOL,SEL_EARNED+a)));
+    } else { setv('p_shares','—'); setv('p_earned','—'); }
+  }catch(e){}
+}
+
+function tab(t){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+t));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  if(t==='pool') refreshPool();
+}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>tab(b.dataset.tab)));
+
+// ---- wallet chooser ----
+function openModal(){
+  const list=$('#wlist'); list.innerHTML='';
+  const d=W.detected();
+  if(!d.length){
+    list.innerHTML='<p class="muted">No browser wallet detected. Paste an address below to act manually.</p>';
+  } else {
+    d.forEach(p=>{
+      const r=document.createElement('button'); r.className='wallet-row';
+      r.innerHTML='<span class="ic">'+p.icon+'</span><span>'+p.name+'</span>';
+      r.onclick=async()=>{ $('#wmodal').classList.remove('on'); await doConnect(p.key); };
+      list.appendChild(r);
+    });
+  }
+  $('#wmodal').classList.add('on');
+}
+async function doConnect(key){
+  const r=await W.connect(key);
+  if(!r.ok){ toast('Connect failed: '+r.error); return; }
+  renderConn(r); refreshPool();
+}
+$('#btnConn').onclick=()=>{ if(W.state().address){ W.disconnect(); renderConn(W.state()); } else openModal(); };
+$('#btnManual').onclick=()=>{
+  const r=W.connectManual($('#manualAddr').value.trim());
+  if(r.ok){ $('#wmodal').classList.remove('on'); renderConn(r); refreshPool(); } else toast(r.error);
+};
+function renderConn(r){
+  if(!r.address){
+    $('#btnConn').textContent='Connect wallet'; $('#btnConn').classList.remove('connected');
+    $('#wlchip').style.display='none';
+    $('#btnTrade').disabled=true; $('#btnLP').disabled=true; $('#btnClaim').disabled=true;
+    $('#btnTrade').textContent='Connect a wallet to trade'; $('#btnLP').textContent='Connect a wallet to add liquidity';
+    setv('p_shares','—'); setv('p_earned','—'); setv('p_tvl','—'); setv('p_rq','—'); setv('p_rt','—'); setv('p_px','—');
+    return;
+  }
+  $('#btnConn').textContent=(r.providerName||'Wallet')+' ✓ '+(r.address.slice(0,6)+'…'+r.address.slice(-4));
+  $('#btnConn').classList.add('connected');
+  $('#wlchip').style.display='inline-block'; $('#wlchip').textContent=r.address.slice(0,6)+'…'+r.address.slice(-4);
+  const nb=$('#netBadge'); nb.textContent='Base · mainnet'; nb.className='net-badge'+(W.isBase(r.chainId)?'':' off');
+  $('#btnTrade').disabled=false; $('#btnLP').disabled=false; $('#btnClaim').disabled=false;
+  $('#btnTrade').textContent='Trade USDC → CPT'; $('#btnLP').textContent='Add USDC liquidity';
+}
+
+// ---- send via wallet ----
+function allowData(spender){ return {to:USDC,data:SEL_APPROVE+addr(spender)+uint(MAXU)}; }
+async function sendTx(tx){
+  const st=W.state();
+  if(!st.provider) return {ok:false,error:'no wallet connected'};
+  try{
+    const hash=await st.provider.request({method:'eth_sendTransaction',params:[{from:st.address,to:tx.to,data:tx.data,value:'0x0'}]});
+    return {ok:true,hash};
+  }catch(e){ return {ok:false,error:(e&&e.message)||'transaction failed'}; }
+}
+const shortH=h=>h?h.slice(0,10)+'…'+h.slice(-6):'';
+
+$('#btnTrade').onclick=async()=>{
+  const st=W.state(); if(!st.address){toast('Connect first');return;}
+  const amt=BigInt(Math.floor(Number($('#sellAmt').value)||0)*1000000); // USDC 6 dec
+  if(amt<=0n){toast('Enter a USDC amount');return;}
+  try{
+    const allow=b256(await ethCall(USDC,SEL_ALLOW+addr(st.address)+addr(DEX)));
+    if(BigInt(allow)<amt){
+      toast('Approving USDC once…');
+      const a1=await sendTx(allowData(DEX));
+      if(!a1.ok){toast('Approve failed: '+a1.error);return;}
+      toast('Approved ('+shortH(a1.hash)+' ) — sending trade…');
+    }
+    const buy={to:DEX,data:SEL_BUY+addr(CPT)+uint(amt)+addr(st.address)};
+    const r=await sendTx(buy);
+    toast(r.ok?('Trade sent: '+r.hash):('Trade failed: '+r.error));
+  }catch(e){ toast('Trade error: '+e.message); }
+};
+
+$('#btnLP').onclick=async()=>{
+  const st=W.state(); if(!st.address){toast('Connect first');return;}
+  const amt=BigInt(Math.floor(Number($('#lpAmt').value)||0)*1000000);
+  if(amt<=0n){toast('Enter USDC to add');return;}
+  try{
+    const allow=b256(await ethCall(USDC,SEL_ALLOW+addr(st.address)+addr(POOL)));
+    if(BigInt(allow)<amt){
+      toast('Approving USDC for the pool…');
+      const a1=await sendTx(allowData(POOL));
+      if(!a1.ok){toast('Approve failed: '+a1.error);return;}
+      toast('Approved ('+shortH(a1.hash)+' ) — adding liquidity…');
+    }
+    const r=await sendTx({to:POOL,data:SEL_ADD+uint(amt)});
+    toast(r.ok?('Liquidity added: '+r.hash):('Add failed: '+r.error));
+    if(r.ok) refreshPool();
+  }catch(e){ toast('LP error: '+e.message); }
+};
+
+$('#btnClaim').onclick=async()=>{
+  const st=W.state(); if(!st.address){toast('Connect first');return;}
+  const r=await sendTx({to:POOL,data:SEL_CLAIM+addr(st.address)});
+  toast(r.ok?('Claimed: '+r.hash):('Claim failed: '+r.error));
+  if(r.ok) refreshPool();
+};
+
+if(window.ethereum&&window.ethereum.on) window.ethereum.on('chainChanged',()=>{renderConn(W.state());refreshPool();});
+
+refreshStats(); refreshPool();
+setInterval(()=>{refreshStats();refreshPool();},30000);
 </script>
 </body>
 </html>

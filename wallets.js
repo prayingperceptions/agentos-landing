@@ -1,64 +1,86 @@
-// wallets.js — human wallet-connect for Agent DEX (EIP-1193 + injected providers + manual).
-// Mirrors Uniswap's connect pattern: detect the installed wallet, request accounts,
-// and fall back to a pasted address (so agents/humans without a browser wallet can act).
+// wallets.js — human wallet-connect for Agent DEX on BASE (EIP-1193).
+// Detection by provider, explicit wallet chooser, Base network switch, and tx sending.
 window.DexWallet = (() => {
+  const BASE = {
+    chainId: '0x2105',                  // 8453
+    chainName: 'Base',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    rpcUrls: ['https://mainnet.base.org'],
+    blockExplorerUrls: ['https://basescan.org'],
+  };
   const providers = [
-    { key: 'ethereum', name: 'Ethereum / MetaMask', ok: () => !!window.ethereum },
-    { key: 'rainbow', name: 'Rainbow', ok: () => !!window.rainbow },
-    { key: 'coinbaseWallet', name: 'Coinbase Wallet', ok: () => !!window.coinbaseWallet },
-    { key: 'okxwallet', name: 'OKX Wallet', ok: () => !!window.okxwallet && !!window.okxwallet.ethereum },
+    { key: 'rainbow',    name: 'Rainbow',         wallet: () => typeof window.rainbow !== 'undefined' ? window.rainbow : (typeof window.ethereum?.isRainbow !== 'undefined' ? window.ethereum : null), test: () => !!window.rainbow || !!window.ethereum?.isRainbow, icon: '🌈' },
+    { key: 'metamask',   name: 'MetaMask',        wallet: () => window.ethereum, test: () => !!window.ethereum?.isMetaMask && !window.ethereum?.isRainbow, icon: '🦊' },
+    { key: 'coinbase',   name: 'Coinbase Wallet', wallet: () => window.coinbaseWalletExtension || window.ethereum?.providers?.find(p => p.isCoinbaseWallet) || null, test: () => !!window.coinbaseWalletExtension || !!window.ethereum?.isCoinbaseWallet, icon: '🅱️' },
+    { key: 'okx',        name: 'OKX Wallet',      wallet: () => window.okxwallet?.ethereum || null, test: () => !!window.okxwallet?.ethereum, icon: '🟢' },
+    { key: 'brave',      name: 'Brave Wallet',    wallet: () => window.ethereum?.isBraveWallet ? window.ethereum : null, test: () => !!window.ethereum?.isBraveWallet, icon: '🦁' },
   ];
-  let connected = { address: null, provider: null, network: null };
 
-  function detected() { return providers.filter((p) => p.ok()).map((p) => p.name); }
+  let connected = { address: null, providerKey: null, providerName: null, provider: null, chainId: null };
+
+  function detected() { return providers.filter(p => p.test()).map(p => ({ key: p.key, name: p.name, icon: p.icon })); }
+
+  function walletFor(key) {
+    const p = providers.find(x => x.key === key);
+    if (!p) return null;
+    if (key === 'rainbow') return p.wallet();
+    return p.wallet();
+  }
 
   async function requestAccounts(prov) {
-    const base = prov && prov.key === 'okxwallet' ? window.okxwallet.ethereum : window.ethereum || window[prov ? prov.key : 'ethereum'];
-    // EIP-1193 standard request first
-    if (base && typeof base.request === 'function') {
-      try {
-        const res = await base.request({ method: 'eth_requestAccounts', params: [] });
-        if (res && res.length) return { ok: true, accounts: res, provider: prov ? prov.name : 'EIP-1193' };
-      } catch { /* fall through */ }
-    }
-    // legacy eth_accounts
-    if (base && typeof base.request === 'function') {
-      try {
-        const r = await base.request({ method: 'eth_accounts', params: [] });
-        if (r && r.length) return { ok: true, accounts: r, provider: prov ? prov.name : 'legacy' };
-      } catch {
-        try { const r2 = await base.request({ method: 'eth_accounts' }); if (r2 && r2.length) return { ok: true, accounts: r2, provider: 'legacy' }; } catch {}
-      }
-    }
-    // MetaMask legacy API (window.ethereum.enable / eth_accounts)
-    if (base && typeof base.enable === 'function') {
-      try {
-        const r = await base.enable();
-        if (r) return { ok: true, accounts: r, provider: prov ? prov.name : 'legacy' };
-      } catch {}
-    }
+    if (!prov || typeof prov.request !== 'function') return { ok: false, error: 'No provider' };
+    try {
+      const res = await prov.request({ method: 'eth_requestAccounts', params: [] });
+      if (res && res.length) return { ok: true, accounts: res };
+    } catch (e) { return { ok: false, error: (e && e.message) || 'request denied' }; }
+    try {
+      const r = await prov.request({ method: 'eth_accounts', params: [] });
+      if (r && r.length) return { ok: true, accounts: r };
+    } catch (e) { return { ok: false, error: (e && e.message) || 'request denied' }; }
     return { ok: false, error: 'wallet returned no accounts' };
   }
 
-  async function connect(providerName) {
-    const prov = providers.find((p) => p.name === providerName || p.key === providerName);
-    const r = await requestAccounts(prov);
-    if (r.ok && r.accounts && r.accounts.length) {
-      connected = { address: r.accounts[0], provider: r.provider, network: 'eip155:8453' };
-      return { ok: true, ...connected };
+  // Switch the wallet to BASE mainnet; add the chain if the wallet doesn't know it.
+  async function ensureBaseChain(prov) {
+    if (!prov || typeof prov.request !== 'function') return { ok: false, error: 'no provider' };
+    try {
+      await prov.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BASE.chainId }] });
+      return { ok: true };
+    } catch (e) {
+      const err = e && e.code;
+      if (err === 4902 || (e && /unrecognized|unknown chain|not added/i.test(String(e.message)))) {
+        try {
+          await prov.request({ method: 'wallet_addEthereumChain', params: [BASE] });
+          await prov.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BASE.chainId }] });
+          return { ok: true };
+        } catch (e2) { return { ok: false, error: (e2 && e2.message) || 'could not add Base' }; }
+      }
+      return { ok: false, error: (e && e.message) || 'switch failed' };
     }
-    return { ok: false, error: r.error || 'no wallet detected' };
   }
 
-  // manual: agents or headless can paste any address
-  function connectManual(address) {
-    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) return { ok: false, error: 'invalid address' };
-    connected = { address: address.toLowerCase(), provider: 'manual', network: 'eip155:8453' };
+  async function connect(key) {
+    const prov = walletFor(key);
+    if (!prov) return { ok: false, error: 'wallet not detected' };
+    const acc = await requestAccounts(prov);
+    if (!acc.ok) return acc;
+    await ensureBaseChain(prov);
+    let chainId = null;
+    try { const c = await prov.request({ method: 'eth_chainId', params: [] }); chainId = c; } catch {}
+    const p = providers.find(x => x.key === key);
+    connected = { address: acc.accounts[0], providerKey: key, providerName: p ? p.name : key, provider: prov, chainId: chainId || BASE.chainId };
     return { ok: true, ...connected };
   }
 
-  function disconnect() { connected = { address: null, provider: null, network: null }; return connected; }
-  function state() { return { ...connected, detected: detected() }; }
+  function connectManual(address) {
+    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) return { ok: false, error: 'invalid address' };
+    connected = { address: address.toLowerCase(), providerKey: 'manual', providerName: 'manual', provider: null, chainId: BASE.chainId };
+    return { ok: true, ...connected };
+  }
 
-  return { connect, connectManual, disconnect, state, detected, providers };
+  function disconnect() { connected = { address: null, providerKey: null, providerName: null, provider: null, chainId: null }; return connected; }
+  function state() { return { ...connected, detected: detected() }; }
+  function isBase(chainId) { return String(chainId).toLowerCase() === '0x2105'; }
+
+  return { connect, connectManual, disconnect, state, detected, providers, ensureBaseChain, isBase, BASE };
 })();
