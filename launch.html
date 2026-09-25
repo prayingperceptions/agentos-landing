@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent DEX — launch & trade</title>
+<style>
+:root{--bg:#0b0e14;--card:#151a24;--text:#e6e9f0;--muted:#9aa3b2;--green:#3dd68c;--red:#ff5c66;--border:#2a3040;--accent:#5b8cff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+.wrap{max-width:960px;margin:0 auto;padding:24px}
+header{border-bottom:1px solid var(--border);padding:18px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:19px;margin:0}header .tag{font-size:12px;color:var(--muted)}
+header nav a{color:var(--accent);text-decoration:none;margin-left:10px}
+h2{font-size:16px;color:var(--text)}.muted{color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin:16px 0}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
+input,select{width:100%;background:#0e1420;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-size:14px}
+button.btn{width:100%;background:var(--green);color:#06210f;border:0;border-radius:10px;padding:13px;font-weight:700;cursor:pointer;font-size:15px}
+button.btn:disabled{opacity:.5;cursor:not-allowed}
+.grid{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px}
+.stat b{display:block;font-size:20px}.stat span{font-size:11px;color:var(--muted)}
+.row{display:flex;justify-content:space-between}.row b{color:var(--text)}
+.volbar{height:8px;background:linear-gradient(90deg,var(--green),#2fbf7a);border-radius:4px;width:100%}
+.pill{display:inline-block;background:#1a2230;color:var(--muted);border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:11px}
+a{color:var(--accent)}.green{color:var(--green)}.red{color:var(--red)}
+pre{background:#0a0f17;border:1px solid var(--border);border-radius:8px;padding:10px;overflow:auto;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🍞 Agent DEX <span class="tag">launch · pool · trade — Uniswap liquidity, PumpDotFun ease</span></h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="demo.html">Demo</a>
+    <a href="#volume" id="navv">Volume</a>
+    <a href="#launch">Launch</a>
+  </nav>
+</header>
+<div class="wrap">
+
+  <!-- LIVE 24/7 VOLUME TILE (CoinGecko, fed by /stats on Base mainnet) -->
+  <section id="volume">
+    <h2>24/7 On-chain Volume <span class="muted" id="volwhen">…</span></h2>
+    <div class="grid">
+      <div class="stat"><span>24h Volume (quote units)</span><b id="vvol">—</b></div>
+      <div class="stat"><span>TVL in pool (quote)</span><b id="vtvl">—</b></div>
+      <div class="stat"><span>Trades</span><b id="vtrades">—</b></div>
+      <div class="stat"><span>Price (quote/token ×1e18)</span><b id="vprice">—</b></div>
+    </div>
+    <div class="volbar" id="vbar" style="width:0%"></div>
+    <p class="muted" id="vnote">Loading live data from <code>agent-dex-eight.vercel.app/stats</code>…</p>
+  </section>
+
+  <!-- LAUNCH FLOW (PumpDotFun-style) -->
+  <section id="launch">
+    <h2>Launch a token <span class="muted">— 2 clicks, then pool it</span></h2>
+    <div class="card">
+      <div class="grid">
+        <div>
+          <label>Token name</label>
+          <input id="n_name" value="Compute" placeholder="e.g. Compute">
+        </div>
+        <div>
+          <label>Symbol</label>
+          <input id="n_symbol" value="CPT" maxlength="8" placeholder="e.g. CPT">
+        </div>
+      </div>
+      <label>Supply</label>
+      <input id="n_supply" type="number" value="1000000" min="1000" step="1000">
+      <div class="row" style="margin-top:14px"><span class="muted">Your launch split on-chain (of supply)</span></div>
+      <div class="row"><span class="muted">Deployer (you)</span><b class="green" id="r_deployer">—</b></div>
+      <div class="row"><span class="muted">Protocol recipient (0.5%)</span><b id="r_protocol">—</b></div>
+      <div class="row"><span class="muted">Lottery escrow (0.5%, ≥100 traders → 1 winner)</span><b id="r_lottery">—</b></div>
+      <div class="row"><span class="muted">Tradable float (98%)</span><b id="r_float">—</b></div>
+      <p class="muted" id="fee_note" style="font-size:12px;margin-top:6px"></p>
+      <button class="btn" id="btn_copy" disabled>Copy exact on-chain launch (cast)</button>
+      <pre id="cmd"></pre>
+    </div>
+  </section>
+
+  <p class="muted" style="margin-top:18px">Venue on Base mainnet: <code>0xB1a77D1CEBb2BdF7A1Dd12758992BfC1408de996</code> · protocol `0x2091…5DeA` · <a href="https://github.com/prayingperceptions/agent-dex">agent-dex repo</a> · <a href="https://agent-dex-eight.vercel.app/fee/rate" target="_blank" rel="noopener">fee schedule</a> · <a href="https://basescan.org/token/0xad3dc01fe083def0f3e7de0f2164865494eb0322" target="_blank" rel="noopener">Compute on Basescan</a></p>
+</div>
+
+<script>
+const DEX='0xB1a77D1CEBb2BdF7A1Dd12758992BfC1408de996';
+const STATS='https://agent-dex-eight.vercel.app/stats';
+function fmt(n){try{const b=BigInt(n);if(b<=0n)return '0';return b.toString();}catch{return String(n)}}
+async function refreshStats(){
+  try{
+    const r=await fetch(STATS);const j=await r.json();
+    setv('vvol',fmt(j.volume24h));setv('vtvl',fmt(j.tvl));
+    setv('vtrades',fmt(j.trades));
+    setv('vprice', fmt(j.price && typeof j.price==='object' ? j.price.perTokenQuoteScale18 : (j.price||'0')));
+    if(j.pooled){document.getElementById('vnote').textContent='Live: '+(j.amm||'pool')+' · trading now';}
+    else{document.getElementById('vnote').textContent='Compute launched but not pooled yet — pool it with USDC to open the market.';}
+    document.getElementById('volwhen').textContent='updated '+new Date(j.updatedAt).toLocaleTimeString();
+    const tvl=parseInt(j.tvl||'0');const vol=parseInt(j.volume24h||'0');
+    const pct=Math.min(100, vol>0?Math.round(vol/tvl*100):0);
+    document.getElementById('vbar').style.width=pct+'%';
+  }catch(e){document.getElementById('vnote').textContent='stats offline';}
+}
+function setv(id,v){document.getElementById(id).textContent=v;}
+function recalc(){
+  const supply=BigInt(Math.floor(Number(document.getElementById('n_supply').value)||0));
+  if(supply<=0n){['r_deployer','r_protocol','r_lottery','r_float'].forEach(x=>setv(x,'—'));document.getElementById('btn_copy').disabled=true;return;}
+  const base=supply/200n; // 0.5%
+  setv('r_deployer',(base*2n).toString());
+  setv('r_protocol',base.toString());
+  setv('r_lottery',base.toString());
+  setv('r_float',(supply-base*4n).toString());
+  const name=document.getElementById('n_name').value.trim()||'Compute';
+  const sym=document.getElementById('n_symbol').value.trim().toUpperCase()||'CPT';
+  document.getElementById('fee_note').textContent='0.5% of supply → protocol recipient; token tradable once pooled (see /list). No signup.';
+  document.getElementById('cmd').textContent=
+`cast send ${DEX} "launch(string,string,uint256)(address)" "${name}" "${sym}" ${supply} \\
+  --rpc-url https://mainnet.base.org --private-key <your-key>`;
+  document.getElementById('btn_copy').disabled=false;
+}
+async function copyCmd(){
+  const t=document.getElementById('cmd').textContent;
+  try{await navigator.clipboard.writeText(t);document.getElementById('btn_copy').textContent='✓ Copied';}
+  catch(e){document.getElementById('btn_copy').textContent='Select + copy below';}
+  setTimeout(()=>{document.getElementById('btn_copy').textContent='Copy exact on-chain launch (cast)';},2000);
+}
+['n_name','n_symbol','n_supply'].forEach(id=>document.getElementById(id).addEventListener('input',recalc));
+document.getElementById('btn_copy').addEventListener('click',copyCmd);
+recalc();
+refreshStats();
+setInterval(refreshStats,30000); // auto-refresh volume 24/7
+</script>
+</body>
+</html>
