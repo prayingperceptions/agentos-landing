@@ -107,6 +107,15 @@
     <div class="tldr-note" id="t5"><b>TLDR — Launch:</b> any token deployed through Agent Launch mints <b>0.5% of supply to the protocol recipient</b> (<code>0x2091…5DeA</code>) at deploy — proven live on Base mainnet (<a href="https://basescan.org/address/0x8A338e50D27126b57D51efb61E0837e38A31d306" rel="noopener" target="_blank">Basescan</a>), one-time, disclosed on-chain, and it fails closed if the fee would underflow. Safe rail, not a sniper bot.</div>
   </div>
 
+  <div class="step" id="s6">
+    <h2><span class="n">6</span> <a href="https://github.com/prayingperceptions/agent-dex" target="_blank" rel="noopener">The Agent DEX — trade it, fees to protocol</a> <span class="ok" style="font-size:12px">(agent-dex)</span><span class="github-hint">click title → open repo</span></h2>
+    <p class="desc">The venue: launch a token, <b>auto-pool it (your 0.5% receipt becomes a liquid LP position)</b>, and trade it — with identity/permission/safety gates on every order. 0.5% listing + 0.05% per-trade to protocol.</p>
+    <div class="term">$ curl -X POST "https://agent-dex-eight.vercel.app/trade" -H 'content-type: application/json' -d '{ quoteIn }'</div>
+    <div class="out" id="o6">waiting…</div>
+    <div class="links"><a class="b-repo" href="https://github.com/prayingperceptions/agent-dex" target="_blank" rel="noopener">Repo</a><a class="b-live" href="https://agent-dex-eight.vercel.app/fee/rate" target="_blank" rel="noopener">Live endpoint</a><a class="b-tldr" href="#" onclick="tldr('t6');return false;">TLDR</a></div>
+    <div class="tldr-note" id="t6"><b>TLDR — Agent DEX:</b> the venue that gives the 0.5% receipt <b>real value</b> — a launched token auto-pools, so it's tradable from mint #1, and your receipt is a liquid LP position that earns. Every agent order is identity + permission + safety gated (fail-closed); 0.5% listing + 0.05% per-trade flow to <code>0x2091…5DeA</code>. This is the anti-front-run answer to the trade floor — safe, disclosed, on the agent's own rails.</div>
+  </div>
+
   <div class="footer">
     Built on <a href="https://x402.org">x402</a>, <a href="https://base.org">Base</a>, the <a href="https://www.coinbase.com/developer-platform">Coinbase CDP</a> facilitator — open source &amp; free. Learn more or support: <a href="mailto:prayingperceptions@gmail.com">prayingperceptions@gmail.com</a>
   </div>
@@ -120,7 +129,7 @@ function tldr(id){
   for (var i=0;i<els.length;i++) els[i].style.display = "none";
   el.style.display = open ? "none" : "block";
 }
-const steps = ["s1","s2","s3","s4","s5"];
+const steps = ["s1","s2","s3","s4","s5","s6"];
 const bar = document.getElementById("bar");
 function out(id, text, cls) {
   const el = document.getElementById(id); el.innerHTML = "";
@@ -151,10 +160,14 @@ async function run(i){
       const r = await fetch("https://agent-authority-beige.vercel.app/evaluate",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({contract:c,request:{agentId:"agent_alice",resource:"box",action:"read",input:{cwd:"workspace"}}})});
       const j = await r.json().catch(()=>({}));
       out("o4", JSON.stringify(j,null,2), j.decision?"ok":"err");
-    } else {
+    } else if(i===4){
       const r = await fetch("https://endpoint-jubilee-labs.vercel.app/launch",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name:"Agent Token",symbol:"AGT",supply:1000000})});
       const j = await r.json().catch(()=>({}));
       out("o5", JSON.stringify(j,null,2), j.fee&&j.ok?"ok":"err");
+    } else {
+      const r = await fetch("https://agent-dex-eight.vercel.app/trade",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({quoteIn:10000})});
+      const j = await r.json().catch(()=>({}));
+      out("o6", JSON.stringify(j,null,2), j.fee&&j.ok?"ok":"err");
     }
   } catch(e){ out("o"+(i+1), "ERROR: "+e.message, "err"); }
   el.classList.remove("active"); el.classList.add("done");
