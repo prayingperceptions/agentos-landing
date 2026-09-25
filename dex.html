@@ -70,20 +70,26 @@ a{color:var(--accent)}
 
   <div class="tabs">
     <button class="tab on" data-tab="trade">Trade</button>
+    <button class="tab" data-tab="portfolio">Portfolio</button>
     <button class="tab" data-tab="pool">Pool</button>
     <button class="tab" data-tab="faq">FAQ</button>
   </div>
 
   <section class="pane on" id="pane-trade">
     <div class="card">
+      <!-- Buy / Sell toggle -->
+      <div style="display:flex;gap:6px;margin-bottom:12px">
+        <button class="btn-main side-sel" id="sideBuy" style="width:50%;background:var(--green);color:#06210f">Buy</button>
+        <button class="tab side-sel" id="sideSell" style="width:50%">Sell</button>
+      </div>
       <div class="field">
-        <div><div class="lab">You pay</div><input id="sellAmt" inputmode="decimal" placeholder="0.00"></div>
-        <div class="sel"><button class="token-btn">USDC</button></div>
+        <div><div class="lab" id="payLab">You pay</div><input id="sellAmt" inputmode="decimal" placeholder="0.00"></div>
+        <div class="sel"><button class="token-btn" id="payTokBtn">USDC</button></div>
       </div>
       <div class="arrow">⇅</div>
       <div class="field">
-        <div><div class="lab">You receive</div><input id="buyAmt" disabled placeholder="0.00"></div>
-        <div class="sel"><button class="token-btn">CPT</button></div>
+        <div><div class="lab" id="recLab">You receive</div><input id="buyAmt" disabled placeholder="0.00"></div>
+        <div class="sel"><button class="token-btn" id="recTokBtn">CPT</button></div>
       </div>
       <p class="muted" id="tradeFee">0.05% trade fee → protocol; live pool price applies.</p>
       <button class="btn-main" id="btnTrade" disabled>Connect a wallet to trade</button>
@@ -92,6 +98,17 @@ a{color:var(--accent)}
         review each wallet prompt before signing. If your wallet shows a security warning, that's
         an automated heuristic on a new domain, not a known threat; see the FAQ.
       </div>
+    </div>
+  </section>
+
+  <!-- HOLDINGS -->
+  <section class="pane" id="pane-portfolio">
+    <div class="card">
+      <h2>Your holdings <span class="muted" id="pf_addr"></span></h2>
+      <div class="row"><span>CPT (Compute)</span><b id="pf_cpt">—</b></div>
+      <div class="row"><span>USDC</span><b id="pf_usdc">—</b></div>
+      <div class="row"><span>Estimated value</span><b id="pf_val">—</b></div>
+      <p class="muted" id="pf_note">Connect a wallet to see its on-chain holdings of this venue's tokens.</p>
     </div>
   </section>
 
@@ -164,16 +181,20 @@ const USDC='0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const POOL='0x8ad4cd81dcbea0ccf1098ac8a42f9040506ebb7d';
 const CN='https://mainnet.base.org';
 const W=window.DexWallet;
-const MAXU=(2n**256n-1n).toString();
 // exact selectors (cast sig)
 const SEL_BUY='0xdb61c76e';                 // buy(address,uint256,address)
+const SEL_SELL='0x3540c919';                // sell(address,uint256,address)
 const SEL_APPROVE='0x095ea7b3';             // approve(address,uint256)
 const SEL_ALLOW='0xdd62ed3e';               // allowance(address,address)
+const SEL_BALANCE='0x70a08231';             // balanceOf(address)
 const SEL_ADD='0x51c6590a';                 // addLiquidity(uint256)
 const SEL_CLAIM='0x61e0d90c';               // claimLp(address)
 const SEL_SHARES='0xc109a6dc';              // lpShares(address)
 const SEL_EARNED='0x008cc262';              // earned(address)
 const SEL_RQ='0x93778609', SEL_RT='0xf4325d67', SEL_PX='0xa035b1fe';
+
+let side='buy';   // 'buy' = pay USDC, get CPT ; 'sell' = pay CPT, get USDC
+const USDC_DEC=6n, CPT_DEC=18n;
 
 function toast(m){const e=$('#toast');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',4600);}
 function setv(id,v){$(id).textContent=v;}
@@ -210,10 +231,35 @@ async function refreshPool(){
   }catch(e){}
 }
 
+// Holdings of the CONNECTED wallet (CPT + USDC)
+async function refreshPortfolio(){
+  const st=W.state();
+  if(!st.address){ setv('pf_addr',''); setv('pf_cpt','—'); setv('pf_usdc','—'); setv('pf_val','—'); return; }
+  const a=addr(st.address);
+  try{
+    const cpt=BigInt(b256(await ethCall(CPT, SEL_BALANCE+a)));      // 18-dec
+    const usdc=BigInt(b256(await ethCall(USDC, SEL_BALANCE+a)));     // 6-dec
+    setv('pf_addr',' · '+st.address.slice(0,6)+'…'+st.address.slice(-4));
+    const cptShow = (cpt/10n**18n).toString();
+    const usdcShow = (usdc/10n**6n).toString();
+    setv('pf_cpt', cptShow+' CPT');
+    setv('pf_usdc','$'+usdcShow+' USDC');
+    // approx value: USDC + CPT×price(quote/token ×1e18)
+    let px=BigInt('0');
+    try{ px=BigInt(b256(await ethCall(POOL,SEL_PX))); }catch{}
+    const cptVal = (cpt*px)/10n**18n;          // → in quote atomic (6-dec)
+    const rawUsd = usdc + cptVal;              // atomic USDC
+    setv('pf_val','≈ $'+(rawUsd/10n**6n).toString());
+    setv('pf_note','Live on-chain holdings of ' + (st.providerName||'the') + ' wallet on Base.');
+  }catch(e){ setv('pf_note','Holdings read failed: '+(e&&e.message||e)); }
+}
+
+
 function tab(t){
   document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+t));
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
   if(t==='pool') refreshPool();
+  if(t==='portfolio') refreshPortfolio();
 }
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>tab(b.dataset.tab)));
 
@@ -236,12 +282,12 @@ function openModal(){
 async function doConnect(key){
   const r=await W.connect(key);
   if(!r.ok){ toast('Connect failed: '+r.error); return; }
-  renderConn(r); refreshPool();
+  renderConn(r); refreshPool(); refreshPortfolio();
 }
 $('#btnConn').onclick=()=>{ if(W.state().address){ W.disconnect(); renderConn(W.state()); } else openModal(); };
 $('#btnManual').onclick=()=>{
   const r=W.connectManual($('#manualAddr').value.trim());
-  if(r.ok){ $('#wmodal').classList.remove('on'); renderConn(r); refreshPool(); } else toast(r.error);
+  if(r.ok){ $('#wmodal').classList.remove('on'); renderConn(r); refreshPool(); refreshPortfolio(); } else toast(r.error);
 };
 function renderConn(r){
   if(!r.address){
@@ -250,6 +296,7 @@ function renderConn(r){
     $('#btnTrade').disabled=true; $('#btnLP').disabled=true; $('#btnClaim').disabled=true;
     $('#btnTrade').textContent='Connect a wallet to trade'; $('#btnLP').textContent='Connect a wallet to add liquidity';
     setv('p_shares','—'); setv('p_earned','—'); setv('p_tvl','—'); setv('p_rq','—'); setv('p_rt','—'); setv('p_px','—');
+    setv('pf_cpt','—'); setv('pf_usdc','—'); setv('pf_val','—'); setv('pf_addr','');
     return;
   }
   $('#btnConn').textContent=(r.providerName||'Wallet')+' ✓ '+(r.address.slice(0,6)+'…'+r.address.slice(-4));
@@ -257,11 +304,12 @@ function renderConn(r){
   $('#wlchip').style.display='inline-block'; $('#wlchip').textContent=r.address.slice(0,6)+'…'+r.address.slice(-4);
   const nb=$('#netBadge'); nb.textContent='Base · mainnet'; nb.className='net-badge'+(W.isBase(r.chainId)?'':' off');
   $('#btnTrade').disabled=false; $('#btnLP').disabled=false; $('#btnClaim').disabled=false;
-  $('#btnTrade').textContent='Trade USDC → CPT'; $('#btnLP').textContent='Add USDC liquidity';
+  setSide(side);
+  refreshPortfolio();
 }
 
-// ---- send via wallet ----
-function allowData(spender){ return {to:USDC,data:SEL_APPROVE+addr(spender)+uint(MAXU)}; }
+// ---- send via wallet: APPROVE EXACT AMOUNT only (no unlimited => not honeypot-ish) ----
+function allowData(spender, amt){ return {to:USDC,data:SEL_APPROVE+addr(spender)+uint(amt)}; }
 async function sendTx(tx){
   const st=W.state();
   if(!st.provider) return {ok:false,error:'no wallet connected'};
@@ -272,40 +320,76 @@ async function sendTx(tx){
 }
 const shortH=h=>h?h.slice(0,10)+'…'+h.slice(-6):'';
 
+// ---- Buy/Sell toggle UI ----
+function setSide(s){
+  side=s;
+  $('#sideBuy').className = 'btn-main side-sel' + (s==='buy'?'':' tab');
+  $('#sideSell').className = 'btn-main side-sel' + (s==='sell'?'':' tab');
+  if(s==='buy'){
+    $('#sideBuy').style.background='var(--green)'; $('#sideBuy').style.color='#06210f';
+    $('#sideSell').style.background=''; $('#sideSell').style.color='';
+    $('#payLab').textContent='You pay (USDC)'; $('#recLab').textContent='You receive (CPT)';
+    $('#payTokBtn').textContent='USDC'; $('#recTokBtn').textContent='CPT';
+    $('#btnTrade').textContent = 'Buy CPT with USDC';
+  } else {
+    $('#sideSell').style.background='var(--red)'; $('#sideSell').style.color='#fff';
+    $('#sideBuy').style.background=''; $('#sideBuy').style.color='';
+    $('#payLab').textContent='You pay (CPT)'; $('#recLab').textContent='You receive (USDC)';
+    $('#payTokBtn').textContent='CPT'; $('#recTokBtn').textContent='USDC';
+    $('#btnTrade').textContent = 'Sell CPT for USDC';
+  }
+}
+$('#sideBuy').onclick=()=>setSide('buy');
+$('#sideSell').onclick=()=>setSide('sell');
+
+// approve exact for buy (USDC) or sell (CPT, approved to DEX)
+async function ensureAllowance(tokenFor, spender, amt){
+  const st=W.state();
+  const token= tokenFor==='USDC'?USDC:CPT;
+  const padAmount = amt; // exact-amount (already scaled)
+  let al='0';
+  try{ al=b256(await ethCall(token, SEL_ALLOW+addr(st.address)+addr(spender))); }catch{}
+  if(BigInt(al||'0') < amt){
+    toast('Approving '+(tokenFor==='USDC'?'USDC':'CPT')+' ('+shortH(amt)+')…');
+    const a1=await sendTx({to:token,data:SEL_APPROVE+addr(spender)+uint(amt)});
+    if(!a1.ok){ toast('Approve failed: '+a1.error); return false; }
+    toast('Approved amount ('+shortH(a1.hash)+' ) — sending…');
+  }
+  return true;
+}
+
 $('#btnTrade').onclick=async()=>{
   const st=W.state(); if(!st.address){toast('Connect first');return;}
-  const amt=BigInt(Math.floor(Number($('#sellAmt').value)||0)*1000000); // USDC 6 dec
-  if(amt<=0n){toast('Enter a USDC amount');return;}
-  try{
-    const allow=b256(await ethCall(USDC,SEL_ALLOW+addr(st.address)+addr(DEX)));
-    if(BigInt(allow)<amt){
-      toast('Approving USDC once…');
-      const a1=await sendTx(allowData(DEX));
-      if(!a1.ok){toast('Approve failed: '+a1.error);return;}
-      toast('Approved ('+shortH(a1.hash)+' ) — sending trade…');
-    }
+  const raw=Number($('#sellAmt').value)||0;
+  if(raw<=0){toast('Enter an amount');return;}
+  if(side==='buy'){
+    const amt=BigInt(Math.floor(raw*1_000_000));          // USDC 6-dec
+    const okA=await ensureAllowance('USDC', DEX, amt);
+    if(!okA) return;
     const buy={to:DEX,data:SEL_BUY+addr(CPT)+uint(amt)+addr(st.address)};
     const r=await sendTx(buy);
-    toast(r.ok?('Trade sent: '+r.hash):('Trade failed: '+r.error));
-  }catch(e){ toast('Trade error: '+e.message); }
+    toast(r.ok?('Buy sent: '+r.hash):('Buy failed: '+r.error));
+  } else {
+    const amt=BigInt(Math.floor(raw*1e18));               // CPT 18-dec
+    const okA=await ensureAllowance('CPT', DEX, amt);
+    if(!okA) return;
+    const sellTx={to:DEX,data:SEL_SELL+addr(CPT)+uint(amt)+addr(st.address)};
+    const r=await sendTx(sellTx);
+    toast(r.ok?('Sell sent: '+r.hash):('Sell failed: '+r.error));
+  }
+  if(!st.provider) refreshPortfolio();
 };
 
 $('#btnLP').onclick=async()=>{
   const st=W.state(); if(!st.address){toast('Connect first');return;}
-  const amt=BigInt(Math.floor(Number($('#lpAmt').value)||0)*1000000);
+  const raw=Number($('#lpAmt').value)||0;
+  const amt=BigInt(Math.floor(raw*1_000_000));
   if(amt<=0n){toast('Enter USDC to add');return;}
-  try{
-    const allow=b256(await ethCall(USDC,SEL_ALLOW+addr(st.address)+addr(POOL)));
-    if(BigInt(allow)<amt){
-      toast('Approving USDC for the pool…');
-      const a1=await sendTx(allowData(POOL));
-      if(!a1.ok){toast('Approve failed: '+a1.error);return;}
-      toast('Approved ('+shortH(a1.hash)+' ) — adding liquidity…');
-    }
-    const r=await sendTx({to:POOL,data:SEL_ADD+uint(amt)});
-    toast(r.ok?('Liquidity added: '+r.hash):('Add failed: '+r.error));
-    if(r.ok) refreshPool();
-  }catch(e){ toast('LP error: '+e.message); }
+  const okA=await ensureAllowance('USDC', POOL, amt);      // exact, not unlimited
+  if(!okA) return;
+  const r=await sendTx({to:POOL,data:SEL_ADD+uint(amt)});
+  toast(r.ok?('Liquidity added: '+r.hash):('Add failed: '+r.error));
+  if(r.ok) refreshPool();
 };
 
 $('#btnClaim').onclick=async()=>{
